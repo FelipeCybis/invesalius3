@@ -441,6 +441,9 @@ class Viewer(wx.Panel):
 
         Publisher.subscribe(self.SetStereoMode, "Set stereo mode")
 
+        Publisher.subscribe(self.EnableProjectedMask, "Enable projected mask")
+        Publisher.subscribe(self.DisableProjectedMask, "Disable projected mask")
+
         Publisher.subscribe(self.Reposition3DPlane, "Reposition 3D Plane")
 
         Publisher.subscribe(self.UpdatePointer, "Update volume viewer pointer")
@@ -547,6 +550,19 @@ class Viewer(wx.Panel):
             mx *= scale
             my *= scale
         return int(mx), int(my)
+
+    def EnableProjectedMask(self):
+        """Enter mode to manually correct the mask via 3D projection.
+
+        Similar to what is possible to do in the 2D slice viewers, the user can select a
+        region in the viewer, but in this case the selection is projected in the 3D
+        space (i.e. the region selected is extrude across the whole volume).
+        """
+        print("EnableProjectedMask not implemented yet")
+
+    def DisableProjectedMask(self):
+        """Exit mode to manually correct the mask via 3D projection."""
+        print("DisableProjectedMask not implemented yet")
 
     def SetStereoMode(self, mode):
         ren_win = self.interactor.GetRenderWindow()

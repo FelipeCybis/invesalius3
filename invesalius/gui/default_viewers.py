@@ -23,6 +23,7 @@ import wx
 import wx.lib.agw.fourwaysplitter as fws
 import wx.lib.colourselect as csel
 import wx.lib.platebtn as pbtn
+from wx.core import MenuItem, WindowIDRef
 
 import invesalius.constants as const
 import invesalius.data.viewer_slice as slice_viewer
@@ -309,7 +310,7 @@ ID_TO_NAME = {}
 ID_TO_TOOL = {}
 ID_TO_TOOL_ITEM = {}
 TOOL_STATE = {}
-ID_TO_ITEMSLICEMENU = {}
+ID_TO_ITEMSLICEMENU: dict[int | WindowIDRef, MenuItem] = {}
 ID_TO_ITEM_3DSTEREO = {}
 ID_TO_STEREO_NAME = {}
 
@@ -358,6 +359,11 @@ class VolumeToolPanel(wx.Panel):
             self, -1, "", BMP_SLICE_PLANE, style=pbtn.PB_STYLE_SQUARE, size=ICON_SIZE
         )
         self.button_slice_plane.SetToolTip("Slices into 3D")
+
+        self.button_project_mask = pbtn.PlateButton(
+            self, -1, "", None, style=pbtn.PB_STYLE_SQUARE, size=ICON_SIZE
+        )
+        self.button_project_mask.SetToolTip("Project mask in 3D")
         # self.button_target = pbtn.PlateButton(self, -1,"", BMP_TARGET, style=pbtn.PB_STYLE_SQUARE|pbtn.PB_STYLE_TOGGLE, size=ICON_SIZE)
         # self.button_target.Enable(0)
 
@@ -386,6 +392,7 @@ class VolumeToolPanel(wx.Panel):
         sizer.Add(self.button_view, 0, wx.TOP | wx.BOTTOM, 1)
         sizer.Add(self.button_slice_plane, 0, wx.TOP | wx.BOTTOM, 1)
         sizer.Add(self.button_stereo, 0, wx.TOP | wx.BOTTOM, 1)
+        sizer.Add(self.button_project_mask, 0, wx.TOP | wx.BOTTOM, 1)
         # sizer.Add(self.button_target, 0, wx.TOP | wx.BOTTOM, 1)
         #  sizer.Add(self.button_3d_mask, 0, wx.TOP | wx.BOTTOM, 1)
 
@@ -394,6 +401,9 @@ class VolumeToolPanel(wx.Panel):
         # Conditions for enabling Target button:
         self.target_selected = False
         self.track_obj = False
+
+        # State of the projected mask button
+        self.is_projected_mask = False
 
         sizer.Fit(self)
 
@@ -420,6 +430,7 @@ class VolumeToolPanel(wx.Panel):
         self.button_view.Bind(wx.EVT_LEFT_DOWN, self.OnButtonView)
         self.button_colour.Bind(csel.EVT_COLOURSELECT, self.OnSelectColour)
         self.button_stereo.Bind(wx.EVT_LEFT_DOWN, self.OnButtonStereo)
+        self.button_project_mask.Bind(wx.EVT_LEFT_DOWN, self.OnButtonProjectMask)
         # self.button_target.Bind(wx.EVT_LEFT_DOWN, self.OnButtonTarget)
 
     def OnButtonRaycasting(self, evt):
@@ -539,7 +550,7 @@ class VolumeToolPanel(wx.Panel):
                 if os.path.isfile(os.path.join(folder, filename))
             ]
 
-    def OnMenuPlaneSlice(self, evt):
+    def OnMenuPlaneSlice(self, evt: wx.CommandEvent):
         id = evt.GetId()
         item = ID_TO_ITEMSLICEMENU[id]
         checked = item.IsChecked()
@@ -549,6 +560,15 @@ class VolumeToolPanel(wx.Panel):
             Publisher.sendMessage("Disable plane", plane_label=label)
         else:
             Publisher.sendMessage("Enable plane", plane_label=label)
+
+    def OnButtonProjectMask(self, evt: wx.MouseEvent):
+        """Function bound to the button for editting mask in 3D."""
+        if self.is_projected_mask:
+            Publisher.sendMessage("Disable projected mask")
+            self.is_projected_mask = False
+        else:
+            Publisher.sendMessage("Enable projected mask")
+            self.is_projected_mask = True
 
     def OnMenuStereo(self, evt):
         id = evt.GetId()
